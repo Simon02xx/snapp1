@@ -107,13 +107,17 @@ async def error_handler(update: object, context: CallbackContext) -> None:
     logging.error(f"Exception while handling update: {context.error}")
 
 # Set up Telegram bot
+# Error handler function
+async def error_handler(update: object, context: CallbackContext) -> None:
+    logging.error(f"Exception while handling update: {context.error}")
+
 def main():
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).timezone(pytz.utc).build()
     
     app.add_handler(CommandHandler("start", lambda update, context: update.message.reply_text("Welcome to Sniper Bot! Auto-sniping is active.")))
     app.add_handler(CommandHandler("balance", lambda update, context: update.message.reply_text("Checking balance...")))
     
-    # Add error handler
+    # Add the error handler to catch exceptions
     app.add_error_handler(error_handler)
     
     logging.info("🚀 Auto-sniper started!")
@@ -123,3 +127,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
