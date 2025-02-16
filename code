@@ -1,0 +1,125 @@
+import logging
+import time
+from telegram import Update, Bot
+from telegram.ext import Application, CommandHandler, CallbackContext
+from web3 import Web3
+import requests
+
+# Set up logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+# User input for configuration
+TELEGRAM_BOT_TOKEN = input("Enter your Telegram Bot Token: ")
+INFURA_URL_SOL = "https://solana-mainnet.infura.io/v3/" + input("Enter your Infura Key for Solana: ")
+PRIVATE_KEY = input("Enter your wallet private key: ")
+WALLET_ADDRESS = input("Enter your wallet address: ")
+
+# Customizable Filters (Hardcoded values)
+MARKET_CAP_RANGE = (50000, 5000000)  # Min: $50,000, Max: $5,000,000
+MIN_HOLDERS = 300  # Minimum 300 holders
+MIN_LIQUIDITY = 100.0  # Minimum 100 SOL liquidity
+MAX_GAS_PRICE = 100  # Maximum 100 Gwei gas price
+STOP_LOSS_PERCENT = 0.30  # Fixed stop-loss at 30%
+
+# Solana Chain Configuration
+SUPPORTED_CHAIN = {
+    "SOL": {
+        "rpc": INFURA_URL_SOL,
+        "router": "https://quote-api.jup.ag/v4/quote",
+    }
+}
+
+# Function to get best swap price from Jupiter
+def get_best_swap(token_address, amount):
+    response = requests.get(f"{SUPPORTED_CHAIN['SOL']['router']}?inputMint=SOL&outputMint={token_address}&amount={amount}")
+    if response.status_code == 200:
+        return response.json()
+    return None
+
+# Check token filtering criteria
+def check_token_criteria(token_address):
+    # Simulated API response
+    token_info = {
+        "market_cap": 5000000,  # Example market cap
+        "holders": 1500,  # Example holders
+        "liquidity": 20.5,  # Example liquidity in SOL
+        "gas_price": 10  # Example gas price in Gwei
+    }
+    
+    if not (MARKET_CAP_RANGE[0] <= token_info["market_cap"] <= MARKET_CAP_RANGE[1]):
+        return False
+    if token_info["holders"] < MIN_HOLDERS:
+        return False
+    if token_info["liquidity"] < MIN_LIQUIDITY:
+        return False
+    if token_info["gas_price"] > MAX_GAS_PRICE:
+        return False
+    return True
+
+# Snipe token using Jupiter
+def snipe(token_address):
+    if not check_token_criteria(token_address):
+        logging.info("🚨 Token does not meet filtering criteria. Skipping.")
+        return
+    
+    best_quote = get_best_swap(token_address, 100000000)  # 0.1 SOL
+    if not best_quote:
+        logging.info("❌ Failed to get best price from Jupiter API.")
+        return
+    
+    logging.info(f"🚀 Auto-sniping {token_address} at best price via Jupiter")
+    monitor_price(token_address)
+
+# Monitor price movements
+def monitor_price(token_address):
+    entry_price = 1  # Simulated entry price
+    while True:
+        current_price = 2  # Simulated price check
+        if current_price >= 2 * entry_price:
+            auto_sell(token_address, portion=0.5)
+        if current_price >= 10 * entry_price:
+            auto_sell(token_address, portion=1.0)
+        if current_price <= entry_price * (1 - STOP_LOSS_PERCENT):
+            logging.info("📉 Stop-loss triggered! Selling all holdings.")
+            auto_sell(token_address, portion=1.0)
+        time.sleep(10)
+
+# Auto-sell function using Jupiter
+def auto_sell(token_address, portion=1.0):
+    logging.info(f"💰 Selling {portion * 100}% of {token_address} via Jupiter.")
+    best_quote = get_best_swap(token_address, 100000000)  # 0.1 SOL
+    if not best_quote:
+        logging.info("❌ Failed to get best price from Jupiter API.")
+        return
+    logging.info(f"✅ Sold {portion * 100}% at best rate.")
+
+# Monitor new pairs and auto-snipe
+def monitor_new_pairs():
+    while True:
+        new_tokens = ["0xNewTokenAddress1", "0xNewTokenAddress2"]  # Simulated response
+        for token_address in new_tokens:
+            logging.info(f"🆕 New token detected on Solana: {token_address}")
+            snipe(token_address)
+        time.sleep(5)
+
+# Error handler function
+async def error_handler(update: object, context: CallbackContext) -> None:
+    logging.error(f"Exception while handling update: {context.error}")
+
+# Set up Telegram bot
+def main():
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    
+    app.add_handler(CommandHandler("start", lambda update, context: update.message.reply_text("Welcome to Sniper Bot! Auto-sniping is active.")))
+    app.add_handler(CommandHandler("balance", lambda update, context: update.message.reply_text("Checking balance...")))
+    
+    # Add error handler
+    app.add_error_handler(error_handler)
+    
+    logging.info("🚀 Auto-sniper started!")
+    
+    app.run_polling()
+    monitor_new_pairs()
+
+if __name__ == "__main__":
+    main()
