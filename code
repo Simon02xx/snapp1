@@ -16,8 +16,8 @@ PRIVATE_KEY = input("Enter your wallet private key: ")
 WALLET_ADDRESS = input("Enter your wallet address: ")
 
 # Customizable Filters (Hardcoded values)
-MARKET_CAP_RANGE = (50000, 5000000)  # Min: $50,000, Max: $5,000,000
-MIN_HOLDERS = 300                  # Minimum 300 holders
+MARKET_CAP_RANGE = (50000, 5000000)  # Min: $10,000, Max: $2,000,000
+MIN_HOLDERS = 100                 # Minimum 100 holders
 MIN_LIQUIDITY = 100.0              # Minimum 100 SOL liquidity
 MAX_GAS_PRICE = 100                # Maximum 100 Gwei gas price
 STOP_LOSS_PERCENT = 0.30           # Fixed stop-loss at 30%
