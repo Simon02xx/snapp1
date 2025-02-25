@@ -12,6 +12,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
     level=logging.INFO
 )
+
 # User input for configuration
 TELEGRAM_BOT_TOKEN = input("Enter your Telegram Bot Token: ")
 INFURA_URL_SOL = "https://solana-mainnet.infura.io/v3/" + input("Enter your Infura Key for Solana: ")
@@ -22,9 +23,9 @@ WALLET_ADDRESS = input("Enter your wallet address: ")
 MARKET_CAP_RANGE = (10_000, 5_000_000)  # Min: $10,000, Max: $5,000,000
 MIN_HOLDERS = 12                       # Minimum 12 holders
 MIN_LIQUIDITY = 50.0                   # Minimum 50 SOL liquidity
-MAX_GAS_PRICE = 100                     # Maximum 100 Gwei gas price
-STOP_LOSS_PERCENT = 0.30                # Fixed stop-loss at 30%
-MIN_LIQUIDITY_USD = 30_000              # Minimum $30,000 liquidity if locked
+MAX_GAS_PRICE = 100                    # Maximum 100 Gwei gas price
+STOP_LOSS_PERCENT = 0.30               # Fixed stop-loss at 30%
+MIN_LIQUIDITY_USD = 30_000             # Minimum $30,000 liquidity if locked
 
 # Solana Chain Configuration
 SUPPORTED_CHAIN = {
@@ -58,7 +59,7 @@ def check_liquidity_status(token_address):
         data = response.json()
 
         liquidity_locked = data.get("liquidity_locked", False)
-        liquidity_usd = data.get("liquidity_usd", 0.0)  # Example: value in USD
+        liquidity_usd = data.get("liquidity_usd", 0.0)  # Value in USD
         
         logging.info(f"Liquidity lock for {token_address}: {liquidity_locked}, Liquidity USD: ${liquidity_usd}")
 
@@ -83,7 +84,7 @@ def snipe(token_address):
     logging.info(f"🔍 Evaluating {token_address} for sniping...")
 
     # Simulated API response for token info.
-    # In production, you should fetch real token data from your chosen source.
+    # In production, fetch real token data from your chosen source.
     token_info = {
         "market_cap": 5000000,
         "holders": 1500,
